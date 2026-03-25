@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent Fetch — Performance Dashboard</title>
+<title>Invoice fetch agent — performance dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -55,7 +55,7 @@ h1{font-size:20px;font-weight:600;margin-bottom:4px}
 </head>
 <body>
 
-<h1>Agent Fetch — Performance Dashboard</h1>
+<h1>Invoice fetch agent — performance dashboard</h1>
 <p class="subtitle" id="subtitle"></p>
 <p class="date-range" id="daterange"></p>
 
@@ -63,6 +63,7 @@ h1{font-size:20px;font-weight:600;margin-bottom:4px}
   <button class="active" data-tab="overview">Overview</button>
   <button data-tab="merchants">Merchant success rates</button>
   <button data-tab="composition">Testing composition</button>
+  <button data-tab="rawdata">Raw data</button>
 </div>
 
 <!-- TAB 1: OVERVIEW -->
@@ -116,9 +117,158 @@ h1{font-size:20px;font-weight:600;margin-bottom:4px}
   </div>
 </div>
 
+
+<!-- TAB 4: RAW DATA -->
+<div class="tab-content" id="tab-rawdata">
+  <div class="header-row">
+    <div class="panel-title" style="margin-bottom:0">Account-level data</div>
+    <div class="controls" id="raw-filters">
+      <button class="active" data-rf="all">All (40)</button>
+      <button data-rf="payhawk_live">Payhawk live</button>
+      <button data-rf="customer_live">Customer live</button>
+      <button data-rf="internal">Internal</button>
+      <button data-rf="external_testing">External testing</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table id="acct-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
+      <thead>
+        <tr id="acct-header" style="position:sticky;top:0;background:var(--surface);z-index:1"></tr>
+      </thead>
+      <tbody id="acct-body"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:1.5rem">
+    <div class="header-row">
+      <div class="panel-title" style="margin-bottom:0">Merchant-level data</div>
+      <div style="position:relative">
+        <input type="text" id="merchant-search" placeholder="Search merchants..." style="font-family:var(--font);font-size:12px;padding:5px 12px 5px 28px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:200px;outline:none">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3)">&#x1F50D;</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="merch-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
+        <thead>
+          <tr id="merch-header" style="position:sticky;top:0;background:var(--surface);z-index:1"></tr>
+        </thead>
+        <tbody id="merch-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="footer" id="footer"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
+// ============== TAB 4: RAW DATA ==============
+const ACCTS = [{"id":"payhawk_d1aa2254","seg":"payhawk_live","a":333,"s":49,"l":112,"r":128,"ca":20,"f":22,"b":2,"p":60,"first":"2026-02-20","last":"2026-03-25"},{"id":"robbie_demo_19c0be1e_demo","seg":"internal","a":141,"s":16,"l":19,"r":59,"ca":2,"f":44,"b":1,"p":30,"first":"2026-03-13","last":"2026-03-25"},{"id":"fonoa_technologies_limited_bb4f7330","seg":"customer_live","a":110,"s":0,"l":65,"r":39,"ca":3,"f":3,"b":0,"p":6,"first":"2026-03-16","last":"2026-03-24"},{"id":"payhawk_limited__b89b3b69","seg":"payhawk_live","a":97,"s":24,"l":8,"r":57,"ca":1,"f":7,"b":0,"p":15,"first":"2026-02-20","last":"2026-03-24"},{"id":"the_wake_up_movement_s_l__eea3dd4a","seg":"customer_live","a":52,"s":0,"l":47,"r":0,"ca":2,"f":3,"b":0,"p":23,"first":"2026-03-17","last":"2026-03-24"},{"id":"hemmersbach_gmbh_co_kg_a8a4103d","seg":"customer_live","a":44,"s":0,"l":23,"r":2,"ca":18,"f":1,"b":0,"p":5,"first":"2026-03-03","last":"2026-03-25"},{"id":"surfshark_b_v__3f203eed","seg":"customer_live","a":42,"s":0,"l":42,"r":0,"ca":0,"f":0,"b":0,"p":3,"first":"2026-03-17","last":"2026-03-24"},{"id":"payhawk_spain_s_l__88d97aa2","seg":"payhawk_live","a":38,"s":0,"l":20,"r":11,"ca":0,"f":1,"b":6,"p":8,"first":"2026-02-26","last":"2026-03-24"},{"id":"isoskele_e1a72fe5","seg":"customer_live","a":37,"s":1,"l":26,"r":7,"ca":0,"f":3,"b":0,"p":17,"first":"2026-03-05","last":"2026-03-24"},{"id":"payhawk_bulgaria_demo_ec0ec516_demo","seg":"external_testing","a":35,"s":9,"l":8,"r":16,"ca":0,"f":2,"b":0,"p":3,"first":"2026-02-27","last":"2026-03-17"},{"id":"payhawk_inc__ae5cc974","seg":"payhawk_live","a":25,"s":2,"l":10,"r":6,"ca":0,"f":7,"b":0,"p":7,"first":"2026-02-24","last":"2026-03-23"},{"id":"payhawk_b_v__d0935201","seg":"payhawk_live","a":13,"s":0,"l":4,"r":6,"ca":0,"f":3,"b":0,"p":5,"first":"2026-02-20","last":"2026-03-20"},{"id":"georgi_genchev_eur_bc05d24a_demo","seg":"external_testing","a":12,"s":0,"l":0,"r":1,"ca":0,"f":11,"b":0,"p":1,"first":"2026-03-11","last":"2026-03-25"},{"id":"talent_systems_europe_limited_6d5de318","seg":"customer_live","a":11,"s":0,"l":11,"r":0,"ca":0,"f":0,"b":0,"p":9,"first":"2026-03-23","last":"2026-03-24"},{"id":"payhawk_financial_services_uab_ecba103b","seg":"payhawk_live","a":11,"s":2,"l":7,"r":0,"ca":2,"f":0,"b":0,"p":4,"first":"2026-02-24","last":"2026-03-18"},{"id":"payhawk_gmbh_fa577922","seg":"payhawk_live","a":9,"s":0,"l":6,"r":2,"ca":0,"f":1,"b":0,"p":5,"first":"2026-03-03","last":"2026-03-19"},{"id":"swap_commerce_ltd_a4498204","seg":"customer_live","a":6,"s":0,"l":6,"r":0,"ca":0,"f":0,"b":0,"p":5,"first":"2026-03-19","last":"2026-03-20"},{"id":"uab_360_it_00a01300","seg":"customer_live","a":5,"s":0,"l":5,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-23","last":"2026-03-24"},{"id":"crowdfarming_sl_1ac1a342","seg":"customer_live","a":4,"s":0,"l":2,"r":0,"ca":2,"f":0,"b":0,"p":4,"first":"2026-03-20","last":"2026-03-24"},{"id":"payhawk_financial_services_limited_ca8bd13a","seg":"payhawk_live","a":4,"s":0,"l":0,"r":4,"ca":0,"f":0,"b":0,"p":1,"first":"2026-02-26","last":"2026-03-19"},{"id":"continental_wind_bulgaria_eood_64ebc9d2","seg":"customer_live","a":3,"s":1,"l":0,"r":0,"ca":0,"f":2,"b":0,"p":3,"first":"2026-03-25","last":"2026-03-25"},{"id":"fieldcode_germany_gmbh_8cad5750","seg":"customer_live","a":3,"s":0,"l":3,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"paradox_media_fddebffe","seg":"customer_live","a":3,"s":0,"l":1,"r":0,"ca":0,"f":2,"b":0,"p":3,"first":"2026-03-12","last":"2026-03-12"},{"id":"payhawk_sas_a247e51a","seg":"payhawk_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-25","last":"2026-03-25"},{"id":"uab_vinted_6589752d","seg":"customer_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-23","last":"2026-03-24"},{"id":"uab_netflow_6e16718a","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":0,"f":1,"b":0,"p":2,"first":"2026-03-19","last":"2026-03-23"},{"id":"sport_alliance_gmbh_442c4b15","seg":"customer_live","a":2,"s":1,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-17","last":"2026-03-19"},{"id":"yego_urban_mobility_sl_847ae009","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":1,"f":0,"b":0,"p":2,"first":"2026-03-19","last":"2026-03-19"},{"id":"vinted_gmbh_08e8e141","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"devicenow_gmbh_1910e752","seg":"customer_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-06","last":"2026-03-06"},{"id":"casting_networks_llc_2c81c808","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-25","last":"2026-03-25"},{"id":"nord_security_inc__89978213","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-24","last":"2026-03-24"},{"id":"hemmersbach_gmbh_co_kg_spolka_ko_5a9a0e52","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-23","last":"2026-03-23"},{"id":"uab_cybercare_46bf69cf","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"uab_360_it_2_839b7a94","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":1,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"lineup7_b2aab25f","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"styleremains_gmbh_ac0d12ad","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"vinted_uk_limited_7513358f","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"finion_capital_gmbh_eb81277c","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-17","last":"2026-03-17"},{"id":"salonkee_s_a__113701cb","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-16","last":"2026-03-16"}];
+
+const segBadge = seg => {
+  const c = SEGCOL[seg] || '#888';
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;background:${c}22;color:${c}">${SEGLBL[seg]||seg}</span>`;
+};
+
+const thStyle = 'text-align:left;padding:8px 10px;font-weight:500;color:var(--text2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;font-size:11px';
+const tdStyle = 'padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap';
+
+// Account table
+const acctCols = [
+  {key:'id',label:'Account ID',fmt:v=>v.replace(/_[a-f0-9]{8}$/,'').replaceAll('_',' ')},
+  {key:'seg',label:'Segment',fmt:v=>segBadge(v)},
+  {key:'a',label:'Attempts',fmt:v=>v},
+  {key:'p',label:'Merchants',fmt:v=>v},
+  {key:'s',label:'Success',fmt:(v,r)=>r.a?`<span style="color:${COL.s}">${v}</span> <span style="color:var(--text3)">(${Math.round(100*v/r.a)}%)</span>`:'0'},
+  {key:'l',label:'Login',fmt:v=>v||''},
+  {key:'r',label:'Reconnect',fmt:v=>v||''},
+  {key:'ca',label:'Captcha',fmt:v=>v||''},
+  {key:'f',label:'Failed',fmt:v=>v||''},
+  {key:'b',label:'Blocked',fmt:v=>v||''},
+  {key:'first',label:'First seen',fmt:v=>v.slice(5)},
+  {key:'last',label:'Last seen',fmt:v=>v.slice(5)}
+];
+
+document.getElementById('acct-header').innerHTML = acctCols.map(c => `<th style="${thStyle}" data-sort="${c.key}">${c.label}</th>`).join('');
+
+let acctSort = {key:'a',dir:-1};
+function renderAcctTable(filter) {
+  let data = filter==='all' ? [...ACCTS] : ACCTS.filter(a=>a.seg===filter);
+  data.sort((a,b) => {
+    const av=a[acctSort.key], bv=b[acctSort.key];
+    if(typeof av==='number') return (av-bv)*acctSort.dir;
+    return String(av).localeCompare(String(bv))*acctSort.dir;
+  });
+  document.getElementById('acct-body').innerHTML = data.map(r =>
+    '<tr>' + acctCols.map(c => `<td style="${tdStyle}">${c.fmt(r[c.key],r)}</td>`).join('') + '</tr>'
+  ).join('');
+}
+renderAcctTable('all');
+
+document.getElementById('acct-header').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if(!th) return;
+  const k = th.dataset.sort;
+  acctSort = {key:k, dir: acctSort.key===k ? -acctSort.dir : -1};
+  const activeFilter = document.querySelector('#raw-filters button.active').dataset.rf;
+  renderAcctTable(activeFilter);
+});
+
+document.getElementById('raw-filters').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#raw-filters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAcctTable(btn.dataset.rf);
+});
+
+// Merchant table
+const merchCols = [
+  {key:'n',label:'Merchant'},
+  {key:'a',label:'Attempts'},
+  {key:'s',label:'Success %',fmt:(v,r)=>`<span style="color:${COL.s};font-weight:500">${v}%</span>`},
+  {key:'l',label:'Login %'},
+  {key:'r',label:'Reconnect %'},
+  {key:'ca',label:'Captcha %'},
+  {key:'f',label:'Failed %'},
+  {key:'b',label:'Blocked %'}
+];
+
+document.getElementById('merch-header').innerHTML = merchCols.map(c => `<th style="${thStyle}" data-msort="${c.key}">${c.label}</th>`).join('');
+
+let merchSort = {key:'a',dir:-1};
+let merchFilter = '';
+
+function renderMerchTable() {
+  let data = [...D];
+  if(merchFilter) data = data.filter(d => d.n.toLowerCase().includes(merchFilter));
+  data.sort((a,b) => {
+    const av=a[merchSort.key], bv=b[merchSort.key];
+    if(typeof av==='number') return (av-bv)*merchSort.dir;
+    return String(av).localeCompare(String(bv))*merchSort.dir;
+  });
+  document.getElementById('merch-body').innerHTML = data.map(r =>
+    '<tr>' + merchCols.map(c => {
+      const v = r[c.key];
+      const display = c.fmt ? c.fmt(v,r) : (typeof v==='number' && c.key!=='a' ? (v||'') : v);
+      return `<td style="${tdStyle}">${display}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+}
+renderMerchTable();
+
+document.getElementById('merch-header').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if(!th) return;
+  const k = th.dataset.msort;
+  merchSort = {key:k, dir: merchSort.key===k ? -merchSort.dir : -1};
+  renderMerchTable();
+});
+
+document.getElementById('merchant-search').addEventListener('input', e => {
+  merchFilter = e.target.value.toLowerCase();
+  renderMerchTable();
+});
+
+</script>
 <script>
 const D=[{"n":"Uber","a":141,"s":26.95,"l":34.04,"r":12.77,"ca":17.02,"f":9.22,"b":0.0},{"n":"Ubr","a":105,"s":7.62,"l":47.62,"r":30.48,"ca":7.62,"f":6.67,"b":0.0},{"n":"Microsoft","a":100,"s":1.0,"l":5.0,"r":85.0,"ca":0.0,"f":9.0,"b":0.0},{"n":"Claude.Ai Subscription","a":77,"s":1.3,"l":68.83,"r":28.57,"ca":0.0,"f":1.3,"b":0.0},{"n":"Linkedin","a":67,"s":38.81,"l":10.45,"r":25.37,"ca":0.0,"f":25.37,"b":0.0},{"n":"Facebook","a":52,"s":11.54,"l":65.38,"r":15.38,"ca":1.92,"f":5.77,"b":0.0},{"n":"Amazon","a":25,"s":0.0,"l":60.0,"r":40.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Twilio","a":24,"s":0.0,"l":12.5,"r":83.33,"ca":0.0,"f":4.17,"b":0.0},{"n":"Lovable","a":19,"s":15.79,"l":68.42,"r":10.53,"ca":0.0,"f":5.26,"b":0.0},{"n":"Chatgpt Subscription","a":14,"s":28.57,"l":42.86,"r":21.43,"ca":0.0,"f":7.14,"b":0.0},{"n":"Spotify","a":12,"s":0.0,"l":0.0,"r":8.33,"ca":0.0,"f":91.67,"b":0.0},{"n":"Travelperkid","a":12,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Atlassian","a":10,"s":0.0,"l":0.0,"r":90.0,"ca":0.0,"f":10.0,"b":0.0},{"n":"Freenow* Cq49sx-2","a":10,"s":0.0,"l":70.0,"r":0.0,"ca":0.0,"f":0.0,"b":30.0},{"n":"Gandi Order","a":10,"s":0.0,"l":10.0,"r":70.0,"ca":0.0,"f":20.0,"b":0.0},{"n":"Taxi Volt Ad","a":10,"s":0.0,"l":10.0,"r":30.0,"ca":0.0,"f":60.0,"b":0.0},{"n":"Cursor Ai Powered Ide","a":9,"s":0.0,"l":44.44,"r":44.44,"ca":11.11,"f":0.0,"b":0.0},{"n":"Frn","a":9,"s":0.0,"l":0.0,"r":55.56,"ca":0.0,"f":11.11,"b":33.33},{"n":"Intuit","a":8,"s":0.0,"l":25.0,"r":75.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Godaddy","a":8,"s":0.0,"l":50.0,"r":12.5,"ca":0.0,"f":25.0,"b":12.5},{"n":"Xero Uk Inv","a":8,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Exact Bv","a":7,"s":0.0,"l":0.0,"r":85.71,"ca":0.0,"f":14.29,"b":0.0},{"n":"Apple","a":7,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Supabase","a":7,"s":0.0,"l":71.43,"r":28.57,"ca":0.0,"f":0.0,"b":0.0},{"n":"Editor S Tap Fetter La","a":7,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Trainline","a":7,"s":28.57,"l":57.14,"r":0.0,"ca":0.0,"f":14.29,"b":0.0},{"n":"UBER","a":7,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Canva Pty Limited","a":6,"s":66.67,"l":16.67,"r":0.0,"ca":0.0,"f":16.67,"b":0.0},{"n":"Figma Monthly Renewal","a":6,"s":16.67,"l":50.0,"r":33.33,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bechtle S.L.U.","a":6,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Airbnb","a":6,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Xero Nz Ltd","a":6,"s":0.0,"l":33.33,"r":66.67,"ca":0.0,"f":0.0,"b":0.0},{"n":"React Flow Starter","a":5,"s":0.0,"l":60.0,"r":40.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Toptal.Com","a":5,"s":0.0,"l":40.0,"r":0.0,"ca":60.0,"f":0.0,"b":0.0},{"n":"Postman Professional","a":5,"s":20.0,"l":0.0,"r":80.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Mailjet.Com","a":5,"s":40.0,"l":0.0,"r":20.0,"ca":0.0,"f":40.0,"b":0.0},{"n":"Buckaroo","a":5,"s":0.0,"l":40.0,"r":40.0,"ca":0.0,"f":20.0,"b":0.0},{"n":"Slack Thbkcuc","a":4,"s":0.0,"l":50.0,"r":50.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Coursera.Org","a":4,"s":0.0,"l":50.0,"r":50.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Aircall.Io","a":4,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Apple.Com","a":4,"s":0.0,"l":75.0,"r":0.0,"ca":0.0,"f":25.0,"b":0.0},{"n":"Zerobounce.Com","a":4,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Npm Inc","a":4,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Retrium.Com","a":4,"s":0.0,"l":50.0,"r":50.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Vercel Enterprise","a":4,"s":0.0,"l":50.0,"r":50.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Association Of Chartered","a":4,"s":25.0,"l":50.0,"r":0.0,"ca":0.0,"f":25.0,"b":0.0},{"n":"Heathrow Parking","a":4,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bolt.Eucardcheck","a":4,"s":0.0,"l":75.0,"r":0.0,"ca":0.0,"f":25.0,"b":0.0},{"n":"Xero Inc","a":4,"s":0.0,"l":50.0,"r":50.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bo Poznan","a":4,"s":0.0,"l":25.0,"r":0.0,"ca":0.0,"f":75.0,"b":0.0},{"n":"Tfl Travel Charge","a":4,"s":25.0,"l":0.0,"r":25.0,"ca":0.0,"f":50.0,"b":0.0},{"n":"Rapid Llc","a":3,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Lokalise.Com","a":3,"s":100.0,"l":0.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Productboard Inc","a":3,"s":0.0,"l":33.33,"r":66.67,"ca":0.0,"f":0.0,"b":0.0},{"n":"Apilayer","a":3,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Sncf Internet","a":3,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Searchadsapple","a":3,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Airalo","a":3,"s":33.33,"l":66.67,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Lemlist","a":3,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Crunchbase Inc","a":3,"s":33.33,"l":0.0,"r":0.0,"ca":0.0,"f":66.67,"b":0.0},{"n":"Moqups","a":3,"s":0.0,"l":66.67,"r":33.33,"ca":0.0,"f":0.0,"b":0.0},{"n":"Openai *Chatgpt Subscr","a":3,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Granola Inc","a":3,"s":0.0,"l":66.67,"r":0.0,"ca":0.0,"f":33.33,"b":0.0},{"n":"Fnac.Com","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bolt.Euo","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Fotor.Com","a":2,"s":0.0,"l":50.0,"r":0.0,"ca":0.0,"f":50.0,"b":0.0},{"n":"Ai Image Generator","a":2,"s":0.0,"l":0.0,"r":50.0,"ca":0.0,"f":50.0,"b":0.0},{"n":"Grammarly Co","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Zara.Com","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Glovo Glovo Prime","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Lucid Software Inc.","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Pganalyze","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Paddle.Net","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Jetbrains","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Sumup","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Raffles Boston","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Buzzsprout","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Jamesbissell.Com","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Sendinblue","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Clerk.Com","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Emag.Bgmarketplacene","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Mvv Ticketshop Logpay","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Boettcher Ag","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Southwesternrailwa","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Bolt.Eu/R/2406122047","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Elevenlabs.Io","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Omnyautoload","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Www.Twilio.Com","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Zerossl","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Typeform S.L.","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Talentsight Inc.","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Proton","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"The Grizzly Labs","a":2,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Sentry","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Temporal Technologies","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Cohere.Ai","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Github Inc","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Stripo.Email","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Flowxo","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Theirstack.Com","a":2,"s":0.0,"l":0.0,"r":50.0,"ca":50.0,"f":0.0,"b":0.0},{"n":"Sage Intacct","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Salesloft Inc","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Nicelydone.Club","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Mobbin.Com","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":0.0,"b":100.0},{"n":"Thomson Reuters Uk Ltd","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Https://Www.Citytel.Bg/","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Bloomberg","a":2,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Guest Infinite* User","a":2,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Monday.Com","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Vidiq","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Wheely","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Chase","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Colegio De Registradores","a":1,"s":100.0,"l":0.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Skeddly.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Zikanalytics.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Intermodalidad Levanteiii","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Gumrd.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Datadog Inc","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Browserstack.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Fasthosts","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Make.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Firecrawl.Dev","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Linear.App","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Zoom.Us","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Easyjet","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Smartlead Products","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Fathom.Video","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Librechat","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Loom Subscription","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Unionivkoni.Com","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Ocado","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Micro Electronic East","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Allegro","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Ukvi Etaweb00000005573","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Www.Ltglink.Lt","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Behringers City Hotel","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Places For London Tfl","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bulgaria Air Jsc","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Wispr","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Gitkraken Software","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Mixpanel Inc","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Ship.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Wpmu Dev Incsubfee.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Instapage","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Maxmind.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Apify","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"ECODEX","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Base44.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Fiverreu","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":100.0,"f":0.0,"b":0.0},{"n":"Mairie De Paris","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Registroimprese.It","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Www.Rewe.De","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Payprocharge.Com","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Sipgate","a":1,"s":0.0,"l":0.0,"r":0.0,"ca":0.0,"f":100.0,"b":0.0},{"n":"Pandadoc Inc.","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Air France","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Tjruvz*Smith Hutchon","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Seales Grocery","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Pagerduty Inc","a":1,"s":0.0,"l":0.0,"r":100.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Miles Mobility Gmbh","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0},{"n":"Bolt.Eu_O_2505141958","a":1,"s":0.0,"l":100.0,"r":0.0,"ca":0.0,"f":0.0,"b":0.0}];
 const S={"total":1062,"providers":161,"accounts":40,"success":9.9,"login":41.5,"reconnect":31.8,"captcha":4.9,"fetch":11.0,"blocked":0.8,"date_from":"2026-02-20","date_to":"2026-03-25","segments":{"payhawk_live":532,"internal":141,"external_testing":47,"customer_live":342}};
@@ -289,6 +439,115 @@ new Chart(document.getElementById('segDaily'), {
       y:{stacked:true, grid:{color:gridColor}, ticks:{color:tickColor, font:{size:10}}}
     }}
 });
+
+// ============== TAB 4: RAW DATA ==============
+const ACCTS = [{"id":"payhawk_d1aa2254","seg":"payhawk_live","a":333,"s":49,"l":112,"r":128,"ca":20,"f":22,"b":2,"p":60,"first":"2026-02-20","last":"2026-03-25"},{"id":"robbie_demo_19c0be1e_demo","seg":"internal","a":141,"s":16,"l":19,"r":59,"ca":2,"f":44,"b":1,"p":30,"first":"2026-03-13","last":"2026-03-25"},{"id":"fonoa_technologies_limited_bb4f7330","seg":"customer_live","a":110,"s":0,"l":65,"r":39,"ca":3,"f":3,"b":0,"p":6,"first":"2026-03-16","last":"2026-03-24"},{"id":"payhawk_limited__b89b3b69","seg":"payhawk_live","a":97,"s":24,"l":8,"r":57,"ca":1,"f":7,"b":0,"p":15,"first":"2026-02-20","last":"2026-03-24"},{"id":"the_wake_up_movement_s_l__eea3dd4a","seg":"customer_live","a":52,"s":0,"l":47,"r":0,"ca":2,"f":3,"b":0,"p":23,"first":"2026-03-17","last":"2026-03-24"},{"id":"hemmersbach_gmbh_co_kg_a8a4103d","seg":"customer_live","a":44,"s":0,"l":23,"r":2,"ca":18,"f":1,"b":0,"p":5,"first":"2026-03-03","last":"2026-03-25"},{"id":"surfshark_b_v__3f203eed","seg":"customer_live","a":42,"s":0,"l":42,"r":0,"ca":0,"f":0,"b":0,"p":3,"first":"2026-03-17","last":"2026-03-24"},{"id":"payhawk_spain_s_l__88d97aa2","seg":"payhawk_live","a":38,"s":0,"l":20,"r":11,"ca":0,"f":1,"b":6,"p":8,"first":"2026-02-26","last":"2026-03-24"},{"id":"isoskele_e1a72fe5","seg":"customer_live","a":37,"s":1,"l":26,"r":7,"ca":0,"f":3,"b":0,"p":17,"first":"2026-03-05","last":"2026-03-24"},{"id":"payhawk_bulgaria_demo_ec0ec516_demo","seg":"external_testing","a":35,"s":9,"l":8,"r":16,"ca":0,"f":2,"b":0,"p":3,"first":"2026-02-27","last":"2026-03-17"},{"id":"payhawk_inc__ae5cc974","seg":"payhawk_live","a":25,"s":2,"l":10,"r":6,"ca":0,"f":7,"b":0,"p":7,"first":"2026-02-24","last":"2026-03-23"},{"id":"payhawk_b_v__d0935201","seg":"payhawk_live","a":13,"s":0,"l":4,"r":6,"ca":0,"f":3,"b":0,"p":5,"first":"2026-02-20","last":"2026-03-20"},{"id":"georgi_genchev_eur_bc05d24a_demo","seg":"external_testing","a":12,"s":0,"l":0,"r":1,"ca":0,"f":11,"b":0,"p":1,"first":"2026-03-11","last":"2026-03-25"},{"id":"talent_systems_europe_limited_6d5de318","seg":"customer_live","a":11,"s":0,"l":11,"r":0,"ca":0,"f":0,"b":0,"p":9,"first":"2026-03-23","last":"2026-03-24"},{"id":"payhawk_financial_services_uab_ecba103b","seg":"payhawk_live","a":11,"s":2,"l":7,"r":0,"ca":2,"f":0,"b":0,"p":4,"first":"2026-02-24","last":"2026-03-18"},{"id":"payhawk_gmbh_fa577922","seg":"payhawk_live","a":9,"s":0,"l":6,"r":2,"ca":0,"f":1,"b":0,"p":5,"first":"2026-03-03","last":"2026-03-19"},{"id":"swap_commerce_ltd_a4498204","seg":"customer_live","a":6,"s":0,"l":6,"r":0,"ca":0,"f":0,"b":0,"p":5,"first":"2026-03-19","last":"2026-03-20"},{"id":"uab_360_it_00a01300","seg":"customer_live","a":5,"s":0,"l":5,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-23","last":"2026-03-24"},{"id":"crowdfarming_sl_1ac1a342","seg":"customer_live","a":4,"s":0,"l":2,"r":0,"ca":2,"f":0,"b":0,"p":4,"first":"2026-03-20","last":"2026-03-24"},{"id":"payhawk_financial_services_limited_ca8bd13a","seg":"payhawk_live","a":4,"s":0,"l":0,"r":4,"ca":0,"f":0,"b":0,"p":1,"first":"2026-02-26","last":"2026-03-19"},{"id":"continental_wind_bulgaria_eood_64ebc9d2","seg":"customer_live","a":3,"s":1,"l":0,"r":0,"ca":0,"f":2,"b":0,"p":3,"first":"2026-03-25","last":"2026-03-25"},{"id":"fieldcode_germany_gmbh_8cad5750","seg":"customer_live","a":3,"s":0,"l":3,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"paradox_media_fddebffe","seg":"customer_live","a":3,"s":0,"l":1,"r":0,"ca":0,"f":2,"b":0,"p":3,"first":"2026-03-12","last":"2026-03-12"},{"id":"payhawk_sas_a247e51a","seg":"payhawk_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-25","last":"2026-03-25"},{"id":"uab_vinted_6589752d","seg":"customer_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-23","last":"2026-03-24"},{"id":"uab_netflow_6e16718a","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":0,"f":1,"b":0,"p":2,"first":"2026-03-19","last":"2026-03-23"},{"id":"sport_alliance_gmbh_442c4b15","seg":"customer_live","a":2,"s":1,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":2,"first":"2026-03-17","last":"2026-03-19"},{"id":"yego_urban_mobility_sl_847ae009","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":1,"f":0,"b":0,"p":2,"first":"2026-03-19","last":"2026-03-19"},{"id":"vinted_gmbh_08e8e141","seg":"customer_live","a":2,"s":0,"l":1,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"devicenow_gmbh_1910e752","seg":"customer_live","a":2,"s":0,"l":2,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-06","last":"2026-03-06"},{"id":"casting_networks_llc_2c81c808","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-25","last":"2026-03-25"},{"id":"nord_security_inc__89978213","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-24","last":"2026-03-24"},{"id":"hemmersbach_gmbh_co_kg_spolka_ko_5a9a0e52","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-23","last":"2026-03-23"},{"id":"uab_cybercare_46bf69cf","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"uab_360_it_2_839b7a94","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":1,"f":0,"b":0,"p":1,"first":"2026-03-20","last":"2026-03-20"},{"id":"lineup7_b2aab25f","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"styleremains_gmbh_ac0d12ad","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"vinted_uk_limited_7513358f","seg":"customer_live","a":1,"s":0,"l":1,"r":0,"ca":0,"f":0,"b":0,"p":1,"first":"2026-03-19","last":"2026-03-19"},{"id":"finion_capital_gmbh_eb81277c","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-17","last":"2026-03-17"},{"id":"salonkee_s_a__113701cb","seg":"customer_live","a":1,"s":0,"l":0,"r":0,"ca":0,"f":1,"b":0,"p":1,"first":"2026-03-16","last":"2026-03-16"}];
+
+const segBadge = seg => {
+  const c = SEGCOL[seg] || '#888';
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;background:${c}22;color:${c}">${SEGLBL[seg]||seg}</span>`;
+};
+
+const thStyle = 'text-align:left;padding:8px 10px;font-weight:500;color:var(--text2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;font-size:11px';
+const tdStyle = 'padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap';
+
+// Account table
+const acctCols = [
+  {key:'id',label:'Account ID',fmt:v=>v.replace(/_[a-f0-9]{8}$/,'').replaceAll('_',' ')},
+  {key:'seg',label:'Segment',fmt:v=>segBadge(v)},
+  {key:'a',label:'Attempts',fmt:v=>v},
+  {key:'p',label:'Merchants',fmt:v=>v},
+  {key:'s',label:'Success',fmt:(v,r)=>r.a?`<span style="color:${COL.s}">${v}</span> <span style="color:var(--text3)">(${Math.round(100*v/r.a)}%)</span>`:'0'},
+  {key:'l',label:'Login',fmt:v=>v||''},
+  {key:'r',label:'Reconnect',fmt:v=>v||''},
+  {key:'ca',label:'Captcha',fmt:v=>v||''},
+  {key:'f',label:'Failed',fmt:v=>v||''},
+  {key:'b',label:'Blocked',fmt:v=>v||''},
+  {key:'first',label:'First seen',fmt:v=>v.slice(5)},
+  {key:'last',label:'Last seen',fmt:v=>v.slice(5)}
+];
+
+document.getElementById('acct-header').innerHTML = acctCols.map(c => `<th style="${thStyle}" data-sort="${c.key}">${c.label}</th>`).join('');
+
+let acctSort = {key:'a',dir:-1};
+function renderAcctTable(filter) {
+  let data = filter==='all' ? [...ACCTS] : ACCTS.filter(a=>a.seg===filter);
+  data.sort((a,b) => {
+    const av=a[acctSort.key], bv=b[acctSort.key];
+    if(typeof av==='number') return (av-bv)*acctSort.dir;
+    return String(av).localeCompare(String(bv))*acctSort.dir;
+  });
+  document.getElementById('acct-body').innerHTML = data.map(r =>
+    '<tr>' + acctCols.map(c => `<td style="${tdStyle}">${c.fmt(r[c.key],r)}</td>`).join('') + '</tr>'
+  ).join('');
+}
+renderAcctTable('all');
+
+document.getElementById('acct-header').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if(!th) return;
+  const k = th.dataset.sort;
+  acctSort = {key:k, dir: acctSort.key===k ? -acctSort.dir : -1};
+  const activeFilter = document.querySelector('#raw-filters button.active').dataset.rf;
+  renderAcctTable(activeFilter);
+});
+
+document.getElementById('raw-filters').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#raw-filters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAcctTable(btn.dataset.rf);
+});
+
+// Merchant table
+const merchCols = [
+  {key:'n',label:'Merchant'},
+  {key:'a',label:'Attempts'},
+  {key:'s',label:'Success %',fmt:(v,r)=>`<span style="color:${COL.s};font-weight:500">${v}%</span>`},
+  {key:'l',label:'Login %'},
+  {key:'r',label:'Reconnect %'},
+  {key:'ca',label:'Captcha %'},
+  {key:'f',label:'Failed %'},
+  {key:'b',label:'Blocked %'}
+];
+
+document.getElementById('merch-header').innerHTML = merchCols.map(c => `<th style="${thStyle}" data-msort="${c.key}">${c.label}</th>`).join('');
+
+let merchSort = {key:'a',dir:-1};
+let merchFilter = '';
+
+function renderMerchTable() {
+  let data = [...D];
+  if(merchFilter) data = data.filter(d => d.n.toLowerCase().includes(merchFilter));
+  data.sort((a,b) => {
+    const av=a[merchSort.key], bv=b[merchSort.key];
+    if(typeof av==='number') return (av-bv)*merchSort.dir;
+    return String(av).localeCompare(String(bv))*merchSort.dir;
+  });
+  document.getElementById('merch-body').innerHTML = data.map(r =>
+    '<tr>' + merchCols.map(c => {
+      const v = r[c.key];
+      const display = c.fmt ? c.fmt(v,r) : (typeof v==='number' && c.key!=='a' ? (v||'') : v);
+      return `<td style="${tdStyle}">${display}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+}
+renderMerchTable();
+
+document.getElementById('merch-header').addEventListener('click', e => {
+  const th = e.target.closest('th');
+  if(!th) return;
+  const k = th.dataset.msort;
+  merchSort = {key:k, dir: merchSort.key===k ? -merchSort.dir : -1};
+  renderMerchTable();
+});
+
+document.getElementById('merchant-search').addEventListener('input', e => {
+  merchFilter = e.target.value.toLowerCase();
+  renderMerchTable();
+});
+
 </script>
 </body>
 </html>
